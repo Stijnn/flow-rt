@@ -1,6 +1,5 @@
 import { Outlet } from "react-router";
 import useIsMobile from "../use-is-mobile";
-import { Label } from "../ui/label";
 
 export const LayoutPage = () => {
   const { isMobile } = useIsMobile();
@@ -8,7 +7,6 @@ export const LayoutPage = () => {
   const MobileLayout = () => {
     return (
       <>
-        <Label>Mobile</Label>
         <Outlet />
       </>
     );
@@ -17,7 +15,6 @@ export const LayoutPage = () => {
   const BigScreenLayout = () => {
     return (
       <>
-        <Label>Desktop</Label>
         <Outlet />
       </>
     );

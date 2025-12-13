@@ -1,12 +1,5 @@
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 import { fetch } from "@tauri-apps/plugin-http";
-import { Label } from "../ui/label";
 import { toast } from "sonner";
 
 export interface Details {
@@ -51,14 +44,6 @@ const ProfileContext = createContext<{
   profile: Profile | null;
   authenticate: (token: string) => Promise<Profile>;
 } | null>(null);
-
-const WelcomePreview = ({ profile }: { profile: Profile }) => {
-  return (
-    <div className="absolute">
-      <Label>Welcome {profile.name}</Label>
-    </div>
-  );
-};
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
