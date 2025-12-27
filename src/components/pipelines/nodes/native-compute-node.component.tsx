@@ -1,35 +1,41 @@
-import { BaseHandle } from "@/components/base-handle";
 import {
   BaseNode,
-  BaseNodeContent,
   BaseNodeFooter,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
 } from "@/components/base-node";
 import { Node, NodeProps, Position, useReactFlow } from "@xyflow/react";
 import { useEffect } from "react";
+
+import {
+  ComputeFunctionProps,
+  ComputeNodeData,
+} from "./compute-node.component";
 import { SingleConnectionHandle } from "../components/single-connection-handle.component";
+import { useNativeFunctions } from "../native-functions.provider";
 
-export type ComputeInput<T> = T & {};
+export type NativeComputeInput<T> = T & {};
+export type NativeComputeFunctionProps = {} & ComputeFunctionProps;
 
-export type ComputeFunctionProps = {
-  callerId?: string;
+export type NativeComputeNodeData = {
+  computeFunction?: ({
+    callerId,
+  }: NativeComputeFunctionProps) => Promise<any> | any;
 };
 
-export type ComputeNodeData = {
-  computeFunction?: ({ callerId }: ComputeFunctionProps) => Promise<any> | any;
-};
+export type NativeComputeNode = Node<NativeComputeNodeData>;
 
-export type ComputeNode = Node<ComputeNodeData>;
-
-export const ComputeNode = ({ id, data }: NodeProps<ComputeNode>) => {
+export const NativeComputeNode = ({
+  id,
+  data,
+}: NodeProps<NativeComputeNode>) => {
   const { updateNodeData, getNode, getNodeConnections } = useReactFlow();
+  const { invokeFunction } = useNativeFunctions();
 
   const nextInComputeChain = () => {
     getNodeConnections({ type: "source", nodeId: id })
       .map((nodeConnection) => getNode(nodeConnection.target))
-      .map((n) => n as ComputeNode)
-      .map((n) => n.data)
+      .map((n) => n?.data as ComputeNodeData)
       .forEach(async (nd) => {
         if (nd.computeFunction) {
           await nd.computeFunction.call(this, { callerId: id });
@@ -37,8 +43,14 @@ export const ComputeNode = ({ id, data }: NodeProps<ComputeNode>) => {
       });
   };
 
-  const onCompute = ({ callerId }: ComputeFunctionProps) => {
-    console.log(`Compute ${id} called from ${callerId}`);
+  const onCompute = ({ callerId }: NativeComputeFunctionProps) => {
+    console.log(`Native Compute ${id} called from ${callerId}`);
+    invokeFunction({
+      functionName: "nmap",
+      context: {
+        arguments: ["127.0.0.1", "-sA"],
+      },
+    });
     nextInComputeChain();
   };
 
@@ -49,7 +61,7 @@ export const ComputeNode = ({ id, data }: NodeProps<ComputeNode>) => {
   return (
     <BaseNode>
       <BaseNodeHeader>
-        <BaseNodeHeaderTitle>Compute Node</BaseNodeHeaderTitle>
+        <BaseNodeHeaderTitle>Native Compute Node</BaseNodeHeaderTitle>
       </BaseNodeHeader>
       <BaseNodeFooter className="grid px-0">
         <SingleConnectionHandle

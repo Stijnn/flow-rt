@@ -15,7 +15,8 @@ import { NodeTypes } from "./nodes/nodes.module";
 
 import { useCallback } from "react";
 import { Button } from "../ui/button";
-import { EventNode, EventNodeData } from "./nodes/event-node.component";
+import { EventNode } from "./nodes/event-node.component";
+import { NativeFunctionsProvider } from "./native-functions.provider";
 
 export const PipelinePage = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([
@@ -29,17 +30,8 @@ export const PipelinePage = () => {
       },
     },
     {
-      type: "computeNode",
-      id: "doSomethingNode-2",
-      data: {},
-      position: {
-        x: 0,
-        y: 0,
-      },
-    },
-    {
-      type: "computeNode",
-      id: "doSomethingNode-3",
+      type: "nativeComputeNode",
+      id: "doSomething-nativeNode",
       data: {},
       position: {
         x: 0,
@@ -78,28 +70,30 @@ export const PipelinePage = () => {
   };
 
   return (
-    <div className="w-full h-full">
-      <Button onClick={() => launchPipeline("test")}>Run</Button>
-      <ReactFlowProvider>
-        <ReactFlow
-          className="flex-1"
-          proOptions={{
-            hideAttribution: false,
-          }}
-          colorMode="dark"
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={NodeTypes}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          fitView
-        >
-          <Controls />
-          <MiniMap position={"top-right"} />
-          <Background variant={BackgroundVariant.Dots} />
-        </ReactFlow>
-      </ReactFlowProvider>
-    </div>
+    <NativeFunctionsProvider>
+      <div className="flex flex-col w-full h-full">
+        <Button onClick={() => launchPipeline("test")}>Run</Button>
+        <ReactFlowProvider>
+          <ReactFlow
+            className="flex-1"
+            proOptions={{
+              hideAttribution: false,
+            }}
+            colorMode="dark"
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={NodeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            fitView
+          >
+            <Controls />
+            <MiniMap position={"top-right"} />
+            <Background variant={BackgroundVariant.Dots} />
+          </ReactFlow>
+        </ReactFlowProvider>
+      </div>
+    </NativeFunctionsProvider>
   );
 };

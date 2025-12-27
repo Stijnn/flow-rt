@@ -4,10 +4,11 @@ import {
   BaseNodeHeader,
   BaseNodeHeaderTitle,
 } from "@/components/base-node";
-import { LabeledHandle } from "@/components/labeled-handle";
+
 import { Node, NodeProps, Position, useReactFlow } from "@xyflow/react";
 import { useEffect } from "react";
 import { ComputeNode } from "./compute-node.component";
+import { SingleConnectionHandle } from "../components/single-connection-handle.component";
 
 export type EventNodeData = {
   eventName: string;
@@ -40,7 +41,11 @@ export const EventNode = ({ id, data }: NodeProps<EventNode>) => {
         <BaseNodeHeaderTitle>On: {data.eventName}</BaseNodeHeaderTitle>
       </BaseNodeHeader>
       <BaseNodeContent className="px-0">
-        <LabeledHandle type="source" position={Position.Right} title="Do" />
+        <SingleConnectionHandle
+          type="source"
+          position={Position.Right}
+          title="Do"
+        />
       </BaseNodeContent>
     </BaseNode>
   );

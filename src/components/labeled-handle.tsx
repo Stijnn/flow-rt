@@ -1,4 +1,4 @@
-import React, { type ComponentProps } from "react";
+import { type ComponentProps } from "react";
 import { type HandleProps } from "@xyflow/react";
 
 import { cn } from "@/lib/utils";
@@ -32,7 +32,7 @@ export function LabeledHandle({
       className={cn(
         "relative flex items-center",
         flexDirections[position],
-        className,
+        className
       )}
       ref={ref}
     >

@@ -6,17 +6,24 @@ use std::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::pipelines::nmap::run_nmap;
+
+mod nmap;
+
 fn impl_get_context() -> Vec<(
     String,
     Arc<dyn Fn(NativeFnContext) -> Result<(), ()> + Send + Sync>,
 )> {
-    return vec![(
-        "println!".to_string(),
-        Arc::new(|ctx| {
-            println!("{ctx:?}");
-            Ok(())
-        }),
-    )];
+    return vec![
+        (
+            "println!".to_string(),
+            Arc::new(|ctx| {
+                println!("{ctx:?}");
+                Ok(())
+            }),
+        ),
+        ("nmap".to_string(), Arc::from(run_nmap)),
+    ];
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
