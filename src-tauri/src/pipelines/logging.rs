@@ -4,7 +4,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, schemars::JsonSchema)]
 pub(crate) enum LogLevel {
     Verbose = 0,
     Info = 1,
@@ -24,7 +24,7 @@ impl Display for LogLevel {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, schemars::JsonSchema)]
 pub(crate) struct LogArguments {
     level: LogLevel,
     message: String,
@@ -33,11 +33,11 @@ pub(crate) struct LogArguments {
 
 const WITH_TIME_DEFAULT: bool = false;
 
-pub(crate) fn add_log(args: LogArguments) -> Result<(), ()> {
+pub(crate) fn add_log(args: LogArguments) -> anyhow::Result<()> {
     let timestamp = if args.with_time.unwrap_or(WITH_TIME_DEFAULT) {
         let n = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .map_err(|_| ())?
+            .map_err(|_| ()).unwrap()
             .as_secs();
         format!("[{}]", n)
     } else {
