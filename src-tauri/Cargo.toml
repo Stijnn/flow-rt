@@ -25,3 +25,5 @@ serde_json = "1"
 tauri-plugin-http = "2"
 schemars = "1.2.0"
 anyhow = "1.0.100"
+dyn-rt = { path = "../rust-vendor/dyn-rt/dyn-rt" }
+tokio = { version = "1.48.0", features = ["fs", "macros", "full"] }

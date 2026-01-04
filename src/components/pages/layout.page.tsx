@@ -1,10 +1,11 @@
-import { Outlet, useLocation } from "react-router";
+import { Outlet } from "react-router";
 import { useActiveMachine } from "../machines/active-machine.provider";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { ActivityIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavBar } from "../navigation/nav-bar.component";
 import { Label } from "../ui/label";
+import { Toaster } from "../ui/sonner";
 
 const ActiveMachineBanner = () => {
   const { activeMachine } = useActiveMachine();
@@ -47,13 +48,11 @@ const ActiveMachineBanner = () => {
 };
 
 const Footer = () => {
-  const currentLocation = useLocation();
-
   return (
     <div className="bg-accent">
       <div className="p-2">
         <Label>
-          {currentLocation.key} | {currentLocation.pathname}
+          Workflows | Copyright (c) 2026 Stijnn. All Rights Reserved.
         </Label>
       </div>
     </div>
@@ -64,12 +63,12 @@ export const LayoutPage = () => {
   /* <div className="flex flex-1 flex-col h-dvh w-dvw overflow-hidden"></div> */
   return (
     <div className="h-dvh w-dvw flex flex-col overflow-hidden">
-      <ActiveMachineBanner />
       <NavBar />
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
       <Footer />
+      <Toaster expand={false} richColors position="top-right" theme="dark" />
     </div>
   );
 };
