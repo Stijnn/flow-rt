@@ -7,7 +7,16 @@ import tomllib
 from genericpath import exists
 from os import mkdir, remove
 
-IS_RELEASE = False
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--clean", action="store_true", help="Clean the modules before running"
+)
+parser.add_argument(
+    "--release", action="store_true", help="Clean the modules before running"
+)
+args = parser.parse_args()
+
+IS_RELEASE = args.release
 TARGET_DIR = "release" if IS_RELEASE else "debug"
 
 MODULE_PREFIX = "lib" if sys.platform.startswith("linux") else ""
@@ -25,7 +34,8 @@ def reformat_name_to_lib_name(name: str):
 
 
 def run_build_in_workspace_root():
-    p = subprocess.Popen(["cargo", "build"], cwd=CORE_MODULES_WS_DIR)
+    a = ["cargo", "build", "--release"] if IS_RELEASE else ["cargo", "build"]
+    p = subprocess.Popen(a, cwd=CORE_MODULES_WS_DIR)
     p.wait()
     return
 
@@ -77,7 +87,7 @@ def install_built_module_if_exists(module_name: str):
         mkdir(MODULES_TARGET_DIR)
 
     if not exists(rfd):
-        print(f"Error, could not locate {module_name} in {CORE_MODULES_BUILD_DIR}")
+        print(f"[ERROR] Could not locate {module_name} in {CORE_MODULES_BUILD_DIR}")
         return
 
     if exists(wfd):
@@ -103,10 +113,4 @@ def main(clean):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--clean", action="store_true", help="Clean the modules before running"
-    )
-    args = parser.parse_args()
-
     main(args.clean)
