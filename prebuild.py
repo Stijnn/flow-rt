@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tomllib
 from genericpath import exists
-from os import remove
+from os import mkdir, remove
 
 IS_RELEASE = False
 TARGET_DIR = "release" if IS_RELEASE else "debug"
@@ -72,6 +72,9 @@ def get_modules():
 def install_built_module_if_exists(module_name: str):
     rfd = f"{CORE_MODULES_BUILD_DIR}/{module_name}"
     wfd = f"{MODULES_TARGET_DIR}/{module_name}"
+
+    if not exists(MODULES_TARGET_DIR):
+        mkdir(MODULES_TARGET_DIR)
 
     if not exists(rfd):
         print(f"Error, could not locate {module_name} in {CORE_MODULES_BUILD_DIR}")
