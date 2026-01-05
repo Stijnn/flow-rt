@@ -1,4 +1,6 @@
+import { useDialogManager } from "../dialogs/dialog.provider";
 import { usePlugins } from "../plugins/plugin.provider";
+import { SettingsPage } from "../settings/settings.page";
 import {
   Menubar,
   MenubarContent,
@@ -9,6 +11,7 @@ import {
 
 export function NavBar() {
   const { showOverview } = usePlugins();
+  const { addDialog } = useDialogManager();
 
   return (
     <div className="p-0">
@@ -17,6 +20,18 @@ export function NavBar() {
           <MenubarTrigger>Plugins</MenubarTrigger>
           <MenubarContent>
             <MenubarItem onClick={async () => await showOverview()}>
+              Manage
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger>Settings</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem
+              onClick={async () => {
+                return addDialog(() => <SettingsPage />);
+              }}
+            >
               Manage
             </MenubarItem>
           </MenubarContent>

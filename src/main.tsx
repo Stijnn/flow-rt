@@ -7,15 +7,25 @@ import "./index.css";
 import { BrowserRouter } from "react-router";
 import { PluginProvider } from "./components/plugins/plugin.provider";
 import { ProjectsProvider } from "./components/projects/projects.provider";
+import {
+  SettingsProvider,
+  useSettings,
+} from "./components/settings/settings.provider";
+
+import { DialogProvider } from "./components/dialogs/dialog.provider";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <BrowserRouter>
-    <ThemeProvider defaultTheme="dark" storageKey="-ui-mode">
-      <PluginProvider>
-        <ProjectsProvider>
-          <App />
-        </ProjectsProvider>
-      </PluginProvider>
-    </ThemeProvider>
+    <SettingsProvider>
+      <ThemeProvider>
+        <DialogProvider>
+          <PluginProvider>
+            <ProjectsProvider>
+              <App />
+            </ProjectsProvider>
+          </PluginProvider>
+        </DialogProvider>
+      </ThemeProvider>
+    </SettingsProvider>
   </BrowserRouter>,
 );

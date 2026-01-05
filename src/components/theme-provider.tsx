@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useSettings } from "./settings/settings.provider";
 
 type Theme = "dark" | "light" | "system";
 
@@ -26,6 +27,17 @@ export function ThemeProvider({
   storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
+  const { settings } = useSettings();
+
+  useEffect(() => {
+    if (!settings) {
+      return;
+    }
+
+    const theme = settings.themeMode ?? ("system" as Theme);
+    setTheme(theme);
+  }, [settings]);
+
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
   );

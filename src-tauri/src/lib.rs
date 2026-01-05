@@ -6,6 +6,10 @@ use std::{
 use anyhow::Result;
 use dyn_rt::{attach::AttachedPlugin, registry::PluginRegistry, FnDescriptor};
 use serde::{Deserialize, Serialize};
+use tauri::{async_runtime::block_on, Manager};
+use tokio::sync::Mutex as TokioMutex;
+
+use crate::settings::AppSettingsState;
 
 mod binding;
 mod fs;
@@ -67,10 +71,21 @@ pub fn run() {
             projects::initialize_project,
             binding::request_plugin_reload,
             fs::open_file_directory_external,
+            settings::get_or_init_settings,
+            settings::sync_settings,
             fetch_plugins
         ])
         .setup(|app| {
-            let settings_path = fs::get_or_init_settings_path();
+            let settings_handle = app.handle();
+            block_on(async {
+                let settings = settings::get_or_init_settings(settings_handle.clone())
+                    .await
+                    .expect("Expected installation of settings config to succeed");
+
+                app.manage::<crate::settings::AppSettingsState>(AppSettingsState {
+                    settings: TokioMutex::new(settings),
+                });
+            });
 
             let plugin_registry_result = binding::load_default_modules(app.handle());
             if let Err(plugin_registry_error) = plugin_registry_result {
