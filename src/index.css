@@ -4,6 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --sidebar-dropdown-popover-width: 242px;
+}
+
+:root {
   --radius: 0.5rem;
   --background: oklch(0.98 0.01 93.48);
   --foreground: oklch(0.34 0.03 94.42);

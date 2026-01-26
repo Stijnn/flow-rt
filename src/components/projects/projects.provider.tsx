@@ -1,25 +1,84 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import { LocalProject, Project } from "@/lib/models";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { toast } from "sonner";
-
-export interface Project {
-  name: string;
-}
+import { CurrentProjectProvider } from "./current-project.provider";
+import { invoke } from "@tauri-apps/api/core";
 
 type ProjectsContextProps = {
-  projects: Project[];
+  projects: LocalProject[];
   isEmpty: boolean;
+  selectedProject: boolean;
+  addProject: (project: LocalProject) => Promise<void> | void;
+  setProject: (project: LocalProject) => Promise<void> | void;
+  clearProject: () => Promise<void> | void;
 } | null;
 
 const ProjectsContext = createContext<ProjectsContextProps>(null);
 
 export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<LocalProject[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    if (projects.length > 0) {
+      localStorage.setItem("--local-projects", JSON.stringify(projects));
+    }
+  }, [projects]);
+
+  useEffect(() => {
+    const localProjectsStr = localStorage.getItem("--local-projects");
+    if (localProjectsStr) {
+      setProjects(JSON.parse(localProjectsStr) as LocalProject[]);
+    }
+  }, []);
+
+  const setProject = async (localProject: LocalProject) => {
+    const data = await invoke<Project>("load_project", {
+      project: {
+        name: localProject.projectName,
+      },
+    });
+    setSelectedProject(data);
+  };
+
+  const addProject = async (project: LocalProject) => {
+    if (
+      projects.filter(
+        (prev) => prev.projectLocation === project.projectLocation
+      ).length > 1
+    ) {
+      return;
+    }
+    setProjects((prev) => [...prev, project]);
+  };
 
   return (
     <ProjectsContext.Provider
-      value={{ projects, isEmpty: projects.length === 0 }}
+      value={{
+        projects,
+        isEmpty: projects.length === 0,
+        addProject,
+        setProject,
+        selectedProject: selectedProject !== null && selectedProject !== undefined,
+        clearProject() {
+          setSelectedProject(undefined);
+        },
+      }}
     >
-      {children}
+      {selectedProject && (
+        <CurrentProjectProvider selectedProject={selectedProject}>
+          {children}
+        </CurrentProjectProvider>
+      )}
+      {!!!selectedProject && children}
     </ProjectsContext.Provider>
   );
 };

@@ -1,46 +1,48 @@
 import { createContext, ReactNode, useState, useContext } from "react";
-import { PageDialogWrapper } from "./page-dialog.component";
 
 type DialogContent = { element: ReactNode; isOpen: boolean };
-type DialogCreationFn = () => Promise<Element> | Element;
+type DialogCreationFn = () => Promise<ReactNode> | ReactNode;
+
+export type DialogVariant = "normal" | "page";
+export type DialogProps = {
+  variant?: DialogVariant;
+};
 
 const DialogContext = createContext<{
-  addDialog: (fn: DialogCreationFn) => Promise<void>;
+  addDialog: (fn: DialogCreationFn, props?: DialogProps) => Promise<void> | void;
+  closeDialog: (index: number) => Promise<void> | void;
+  dialogs: { ctx: DialogContent; props: DialogProps }[];
 } | null>(null);
 
 export const DialogProvider = ({ children }: { children: ReactNode }) => {
-  const [dialogStack, setDialogStack] = useState<DialogContent[]>([]);
+  const [dialogStack, setDialogStack] = useState<
+    { ctx: DialogContent; props: DialogProps }[]
+  >([]);
 
-  const addDialog = async (fn: DialogCreationFn) => {
+  const addDialog = async (fn: DialogCreationFn, props?: DialogProps) => {
     const resolvedElement = {
       element: await fn(),
       isOpen: true,
     } as unknown as DialogContent;
-    setDialogStack((prev) => [...prev, resolvedElement]);
+    setDialogStack((prev) => [
+      ...prev,
+      { ctx: resolvedElement, props: props ?? { variant: "page" } },
+    ]);
   };
 
   const closeDialog = (index: number) => {
     setDialogStack((prev) =>
       prev.map((dialog, i) =>
-        i === index ? { ...dialog, isOpen: false } : dialog,
-      ),
+        i === index
+          ? { ...dialog, ctx: { ...dialog.ctx, isOpen: false } }
+          : dialog
+      )
     );
   };
 
   return (
-    <DialogContext.Provider value={{ addDialog }}>
+    <DialogContext.Provider value={{ addDialog, closeDialog, dialogs: dialogStack }}>
       {children}
-      {dialogStack.map((node, index) => (
-        <PageDialogWrapper
-          key={index}
-          isOpen={node.isOpen}
-          onRequestClose={async () => {
-            closeDialog(index);
-          }}
-        >
-          {node.element}
-        </PageDialogWrapper>
-      ))}
     </DialogContext.Provider>
   );
 };

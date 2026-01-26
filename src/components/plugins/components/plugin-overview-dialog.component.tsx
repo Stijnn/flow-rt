@@ -1,12 +1,3 @@
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
@@ -18,8 +9,6 @@ import {
   GitCommitVertical,
   GlassesIcon,
   HashIcon,
-  InspectIcon,
-  SquareFunctionIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -257,43 +246,33 @@ enum PluginOverviewDialogTabs {
   SETTINGS = "Settings",
 }
 
-export const PluginOverviewDialog = ({
-  isOpen,
-  onRequestClose,
-}: {
-  isOpen: boolean;
-  onRequestClose: () => void;
-}) => {
+export const PluginOverviewDialog = () => {
   const [activeTab, setActiveTab] = useState(PluginOverviewDialogTabs.OVERVIEW);
 
   return (
-    <Dialog open={isOpen} onOpenChange={(s) => !s && onRequestClose()}>
-      <DialogContent className="min-w-[calc(100vw-8rem)] min-h-[calc(100vh-8rem)]">
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as PluginOverviewDialogTabs)}
-        >
-          <TabsList>
-            {Object.values(PluginOverviewDialogTabs).map((label) => (
-              <TabsTrigger key={label} value={label}>
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+    <Tabs
+      value={activeTab}
+      onValueChange={(v) => setActiveTab(v as PluginOverviewDialogTabs)}
+    >
+      <TabsList>
+        {Object.values(PluginOverviewDialogTabs).map((label) => (
+          <TabsTrigger key={label} value={label}>
+            {label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
 
-          <TabsContent value={PluginOverviewDialogTabs.OVERVIEW}>
-            {activeTab === PluginOverviewDialogTabs.OVERVIEW && <Overview />}
-          </TabsContent>
+      <TabsContent value={PluginOverviewDialogTabs.OVERVIEW}>
+        {activeTab === PluginOverviewDialogTabs.OVERVIEW && <Overview />}
+      </TabsContent>
 
-          <TabsContent value={PluginOverviewDialogTabs.COMMUNITY}>
-            {activeTab === PluginOverviewDialogTabs.COMMUNITY && <Community />}
-          </TabsContent>
+      <TabsContent value={PluginOverviewDialogTabs.COMMUNITY}>
+        {activeTab === PluginOverviewDialogTabs.COMMUNITY && <Community />}
+      </TabsContent>
 
-          <TabsContent value={PluginOverviewDialogTabs.SETTINGS}>
-            {activeTab === PluginOverviewDialogTabs.SETTINGS && <Settings />}
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+      <TabsContent value={PluginOverviewDialogTabs.SETTINGS}>
+        {activeTab === PluginOverviewDialogTabs.SETTINGS && <Settings />}
+      </TabsContent>
+    </Tabs>
   );
 };

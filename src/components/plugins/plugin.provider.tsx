@@ -7,7 +7,6 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { PluginOverviewDialog } from "./components/plugin-overview-dialog.component";
 
 export interface PluginFunctionDescriptor {
   function_name: string;
@@ -31,22 +30,6 @@ type PluginProviderContext = {
 } | null;
 
 const PluginContext = createContext<PluginProviderContext>(null);
-
-const PluginProviderManager = ({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => Promise<void> | void;
-}) => {
-  return (
-    <PluginOverviewDialog
-      key={"plugin-overview-dialog"}
-      isOpen={isOpen}
-      onRequestClose={async () => await onClose()}
-    />
-  );
-};
 
 export const PluginProvider = ({ children }: { children: ReactNode }) => {
   const [plugins, setPlugins] = useState<Plugin[]>([]);
@@ -93,10 +76,6 @@ export const PluginProvider = ({ children }: { children: ReactNode }) => {
           plugins.filter((f) => f.name === name)[0] ?? undefined,
       }}
     >
-      <PluginProviderManager
-        isOpen={isOverviewOpen}
-        onClose={async () => await closeOverview()}
-      />
       {children}
     </PluginContext.Provider>
   );

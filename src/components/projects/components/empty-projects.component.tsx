@@ -1,3 +1,4 @@
+import { DirectorySelector } from "@/components/fs/directory-selector.component";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -8,8 +9,11 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { FolderCode } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export const EmptyProjects = () => {
+  const nav = useNavigate();
+
   return (
     <Empty>
       <EmptyHeader>
@@ -24,20 +28,10 @@ export const EmptyProjects = () => {
       </EmptyHeader>
       <EmptyContent>
         <div className="flex gap-2">
-          <Button>Create Project</Button>
+          <Button onClick={() => { nav("/projects/new", { viewTransition: true }) }}>Create Project</Button>
           <Button variant="outline">Import Project</Button>
         </div>
       </EmptyContent>
-      {/* <Button */}
-      {/*   variant="link" */}
-      {/*   asChild */}
-      {/*   className="text-muted-foreground" */}
-      {/*   size="sm" */}
-      {/* > */}
-      {/*   <a href="#"> */}
-      {/*     Learn More <ArrowUpRightIcon /> */}
-      {/*   </a> */}
-      {/* </Button> */}
     </Empty>
   );
 };

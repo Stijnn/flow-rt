@@ -11,10 +11,15 @@ use tokio::sync::Mutex as TokioMutex;
 
 use crate::settings::AppSettingsState;
 
-mod binding;
-mod fs;
-mod projects;
-mod settings;
+pub mod binding;
+pub mod fs;
+pub mod projects;
+pub mod settings;
+pub mod graphs;
+pub mod schemas;
+
+#[macro_use]
+pub mod macros;
 
 static APP_PLUGIN_REGISTRY: OnceLock<Mutex<PluginRegistry>> = OnceLock::new();
 
@@ -69,8 +74,12 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             projects::initialize_project,
+            projects::load_project,
             binding::request_plugin_reload,
             fs::open_file_directory_external,
+            fs::list_directory,
+            fs::get_home_directory,
+            fs::list_drives,
             settings::get_or_init_settings,
             settings::sync_settings,
             fetch_plugins
