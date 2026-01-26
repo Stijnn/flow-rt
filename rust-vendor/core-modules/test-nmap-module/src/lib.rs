@@ -1,6 +1,7 @@
 use std::process::Command;
 
 use dyn_rt::{
+    expose,
     serde::{Deserialize, Serialize},
     utils::{Plugin, PluginBuilder},
 };
@@ -8,13 +9,13 @@ use dyn_rt::{
 #[dyn_rt::macros::plugin]
 fn libmain() -> Plugin {
     PluginBuilder::new()
-        .set_name("test-nmap-module".into())
-        .set_description("A module to utilize nmap. Warning: make sure you have nmap installed and reachable by $PATH".into())
-        .set_version(env!("CARGO_PKG_VERSION").into())
-        .add_commands(vec![
-            "nmap_run".into(),
-            "nmap_version".into(),
-            "nmap_check".into(),
+        .set_name("test-nmap-module")
+        .set_description("A module to utilize nmap. Warning: make sure you have nmap installed and reachable by $PATH")
+        .set_version(env!("CARGO_PKG_VERSION"))
+        .add_commands(expose![
+            nmap_check,
+            nmap_run,
+            nmap_version
         ])
         .build()
 }
