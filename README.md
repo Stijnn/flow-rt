@@ -52,7 +52,13 @@ Flow-RT leverages the Tauri Architecture to isolate the UI from the execution en
 
 1.  **Clone the repository**
     ```bash
-    git clone [https://github.com/Stijnn/flow-rt.git](https://github.com/Stijnn/flow-rt.git)
+    git clone --recurse-submodules https://github.com/Stijnn/flow-rt.git
+    cd flow-rt
+    ```
+
+1.  **Optional: Clone the repository with parallel submodules**
+    ```bash
+    git clone --recurse-submodules -j8 https://github.com/Stijnn/flow-rt.git
     cd flow-rt
     ```
 
