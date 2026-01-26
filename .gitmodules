@@ -1,3 +1,0 @@
-[submodule "rust-vendor/dyn-rt"]
-	path = rust-vendor/dyn-rt
-	url = https://github.com/Stijnn/dyn-rt.git
