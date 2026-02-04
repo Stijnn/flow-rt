@@ -33,3 +33,19 @@ export type GraphEvent<T> = {
   eventName: string;
   data?: T | null;
 };
+
+export type ProjectConfiguration = {
+  info: ProjectInformation;
+  location?: string;
+};
+
+export type ProjectInformation = {
+  name: string;
+  description: string;
+  version: string;
+};
+
+export type NewProject = {
+  name: string;
+  location: string;
+};

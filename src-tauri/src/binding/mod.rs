@@ -1,16 +1,81 @@
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::OnceLock;
 
 use anyhow::anyhow;
 use anyhow::Ok as anyhowOk;
 
+use dyn_rt::attach::AttachedPlugin;
 use dyn_rt::registry::{PluginRegistry, PluginRegistryBuilder};
+use dyn_rt::FnDescriptor;
+use serde::Deserialize;
+use serde::Serialize;
 use tauri::path::BaseDirectory;
 use tauri::AppHandle;
 use tauri::Manager;
 
-use crate::PluginDescription;
-use crate::APP_PLUGIN_REGISTRY;
+static APP_PLUGIN_REGISTRY: OnceLock<Mutex<PluginRegistry>> = OnceLock::new();
+
+#[derive(Serialize, Deserialize)]
+pub(crate) struct PluginDescription {
+    name: String,
+    description: String,
+    version: String,
+    functions: HashMap<String, FnDescriptor>,
+    location: String,
+    blake3_hash: String,
+}
+
+impl PluginDescription {
+    fn from_plugin(plugin: &AttachedPlugin) -> Self {
+        Self {
+            name: plugin.name.clone(),
+            description: plugin.description.clone(),
+            version: plugin.cargo_version.clone(),
+            functions: plugin
+                .functions
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect::<HashMap<String, FnDescriptor>>(),
+            location: plugin.location.clone(),
+            blake3_hash: plugin.blake3_hash.clone(),
+        }
+    }
+}
+
+pub(crate) fn init_plugin_repo(handle: &AppHandle) {
+    let plugin_registry_result = load_default_modules(handle);
+    if let Err(plugin_registry_error) = plugin_registry_result {
+        println!("{plugin_registry_error:?}");
+        panic!("{plugin_registry_error}");
+    }
+
+    let plugin_registry = plugin_registry_result.unwrap();
+    println!("{:?}", plugin_registry.get_plugins_map());
+
+    if let Err(_e) = APP_PLUGIN_REGISTRY.set(Mutex::new(plugin_registry)) {
+        panic!("Failed to initialize global plugin repository.");
+    }
+}
+
+#[tauri::command]
+pub(crate) async fn fetch_plugins() -> Result<Vec<PluginDescription>, String> {
+    let registry_guard = APP_PLUGIN_REGISTRY
+        .get()
+        .ok_or_else(|| "Plugin registry is uninitialized.".to_string())?
+        .lock()
+        .map_err(|e| format!("Could not lock registry context: {e}"))?;
+
+    let plugin_names = registry_guard
+        .get_plugins_vec()
+        .iter()
+        .map(|k| PluginDescription::from_plugin(k))
+        .collect();
+
+    Ok(plugin_names)
+}
 
 fn get_lib_files_in_dir(dir: PathBuf) -> anyhow::Result<Vec<PathBuf>> {
     if !dir.is_dir() {

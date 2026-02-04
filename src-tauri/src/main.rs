@@ -12,5 +12,5 @@ fn main() {
         }
     }
 
-    hackthebox_app_lib::run()
+    flow_rt_app_lib::run()
 }

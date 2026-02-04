@@ -44,9 +44,9 @@ pub(crate) struct DirectoryListing {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) enum DirectoryItemType {
-    FILE,
-    DIRECTORY,
-    OTHER
+    File,
+    Directory,
+    Other
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -64,7 +64,7 @@ pub(crate) async fn list_drives() -> Result<DirectoryListing, String> {
     #[cfg(target_os = "windows")]
     {
         let drives = win32_get_logical_drives().iter().map(|drive_letter| {
-            return DirectoryItem {name:drive_letter.clone(),path:drive_letter.clone(),item_type:DirectoryItemType::DIRECTORY, ext: None };
+            DirectoryItem {name:drive_letter.clone(),path:drive_letter.clone(),item_type:DirectoryItemType::Directory, ext: None }
         }).collect::<Vec<_>>();
         let listing = DirectoryListing { entries: drives };
         Ok(listing)
@@ -93,7 +93,7 @@ fn win32_get_logical_drives() -> Vec<String> {
 pub(crate) async fn list_directory(path: String) -> Result<DirectoryListing, String> {
     let mut path_buf = PathBuf::from(path.clone());
     if !path_buf.exists() {
-        return Err(format!("{path} does not exist").into());
+        return Err(format!("{path} does not exist"));
     }
 
     if path_buf.is_file() {
@@ -111,12 +111,12 @@ pub(crate) async fn list_directory(path: String) -> Result<DirectoryListing, Str
 
                 let mut extension: Option<String> = None;
                 let entry_type = if file_type.is_dir() {
-                    DirectoryItemType::DIRECTORY
+                    DirectoryItemType::Directory
                 } else if file_type.is_file() {
                     extension = Some(entry.path().extension().unwrap().to_str().unwrap().to_string());
-                    DirectoryItemType::FILE
+                    DirectoryItemType::File
                 } else {
-                    DirectoryItemType::OTHER
+                    DirectoryItemType::Other
                 };
 
                 let entry_name = entry.file_name().to_str().unwrap().to_string();

@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::from_str;
 use tauri::{AppHandle, Manager};
@@ -65,14 +67,14 @@ fn theme_mode_default() -> String {
 pub struct AppSettings {
     version: Version,
     #[serde(default = "theme_mode_default", rename = "themeMode")]
-    theme_mode: String
+    theme_mode: String,
 }
 
 impl Default for AppSettings {
     fn default() -> Self {
         Self { 
             version: Version::default(), 
-            theme_mode: "system".to_owned() 
+            theme_mode: "system".to_owned(),
         }
     }
 }

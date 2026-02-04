@@ -1,117 +1,224 @@
-use std::{fs::{File, create_dir_all}, io::BufReader, path::PathBuf};
+use std::{io::Read, path::PathBuf, sync::Mutex};
 
-use anyhow::Result;
+use diesel::{
+    ExpressionMethods, OptionalExtension, QueryDsl, QueryResult, RunQueryDsl, SelectableHelper,
+};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use tauri::{AppHandle, Emitter, Manager};
 
-#[derive(Serialize, Deserialize)]
-pub struct Project {
-    name: String,
-    graphs: Vec<ProjectGraph>,
+use crate::{
+    models::{NewTrackedProject, TrackedProject},
+    schema::project::{self, directory_location, title},
+    silence,
+};
+
+mod initializer;
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub(crate) struct ProjectTOMLConfiguration {
+    #[serde(rename = "info", alias = "information", alias = "workspace")]
+    pub info: ProjectInformation,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct ProjectGraph {
-    name: String,
-    nodes: Option<Vec<Value>>,
-    edges: Option<Vec<Value>>,
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub(crate) struct ProjectConfiguration {
+    #[serde(rename = "info", alias = "information", alias = "workspace")]
+    pub info: ProjectInformation,
+    pub location: String,
 }
 
-impl ProjectGraph {
-    fn from_file(path: PathBuf) -> Result<Self, String> {
-        let f = File::open(path).map_err(|e| "Failed to open file")?;
-        let b = BufReader::new(f);
-        Ok(serde_json::from_reader::<BufReader<File>, ProjectGraph>(b).map_err(|e| "Failed to parse graph")?)
-    }
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub(crate) struct ProjectInformation {
+    pub name: String,
+    pub description: String,
+    pub version: String,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct LocalProject {
-    name: String,
-}
-
-#[tauri::command]
-pub async fn initialize_project(new_project: LocalProject) -> Result<Project, String> {
-    #[cfg(any(target_os = "windows", target_os = "linux"))]
-    return impl_initialize_project(new_project).await;
-    #[cfg(not(any(target_os = "windows", target_os = "linux")))]
-    return Err("Unsupported Platform");
-}
-
-async fn impl_initialize_project(new_project: LocalProject) -> Result<Project, String> {
-    let home_dir = crate::fs::get_home_directory()
-        .await
-        .map_err(|_| "Error retrieving $HOME")?;
-    let dir = PathBuf::from(home_dir).join(format!(".projects/{}", new_project.name));
-
-    if dir.exists() {
-        return Err(format!("Directory {:?} already exists", dir));
-    }
-
-    tokio::fs::create_dir_all(dir.clone())
-        .await
-        .map_err(|e| format!("Failed to create project directory: {e}"))?;
-
-    let json_content = serde_json::to_string_pretty(&new_project)
-        .map_err(|e| format!("Failed to serialize data: {e}"))?;
-
-    let file_path = dir.join("project.json");
-    tokio::fs::write(&file_path, json_content)
-        .await
-        .map_err(|e| format!("Failed to write project.json: {e}"))?;
-
-    Ok(Project {
-        name: new_project.name,
-        graphs: vec![],
-    })
+#[derive(Serialize, Deserialize, Clone)]
+pub(crate) struct NewProject {
+    pub name: String,
+    pub location: String,
 }
 
 #[tauri::command]
-pub async fn load_project(project: LocalProject) -> Result<Project, String> {
-    #[cfg(any(target_os = "windows", target_os = "linux"))]
-    return impl_load_project(project).await;
-    #[cfg(not(any(target_os = "windows", target_os = "linux")))]
-    return Err("Unsupported Platform");
+pub(crate) async fn create_project(
+    app: AppHandle,
+    new_project: NewProject,
+) -> Result<ProjectConfiguration, String> {
+    let result = new_project.init_at_location();
+    if let Err(e) = result {
+        eprintln!("{e}");
+        return Err(e);
+    }
+
+    let new_project = result.unwrap();
+    silence!(track_project(
+        new_project.name.clone(),
+        &new_project.location
+    ));
+
+    open_project(app, new_project.location.clone()).await
 }
 
-async fn impl_load_project(project: LocalProject) -> Result<Project, String> {
-    let home_dir = crate::fs::get_home_directory()
-        .await
-        .map_err(|_| "Error retrieving $HOME")?;
-    let root_dir = PathBuf::from(home_dir).join(format!(".projects/{}", project.name));
+#[tauri::command]
+pub(crate) async fn open_project(
+    app: AppHandle,
+    location: String,
+) -> Result<ProjectConfiguration, String> {
+    match get_project_configuration_from_location(&app, &location) {
+        Ok(config) => {
+            let tracked_project = find_tracked_project_by_name_and_location(&config, &location)
+                .or_else(|| track_project(config.info.name.clone(), &location).ok());
 
-    if !root_dir.exists() {
-        return Err("Could not find project directory.".into());
+            if tracked_project.is_none() {
+                return Err("Failed to find imported project".to_string());
+            }
+
+            let tracked_project = tracked_project.unwrap();
+            silence!(record_opening(tracked_project.id));
+
+            let state = app.state::<Mutex<Option<ProjectConfiguration>>>();
+            let mut project_lock = state.lock().map_err(|_| "Failed to lock project state")?;
+
+            *project_lock = Some(config.clone());
+
+            silence!(app.emit("on_current_project_changed", config.clone()));
+
+            Ok(config)
+        }
+        Err(e) => Err(e),
+    }
+}
+
+#[tauri::command]
+pub(crate) async fn get_all_projects() -> Vec<ProjectConfiguration> {
+    distinct_projects()
+}
+
+fn has_project(app: &AppHandle) -> bool {
+    app.state::<Mutex<Option<ProjectConfiguration>>>()
+        .lock()
+        .unwrap()
+        .is_some()
+}
+
+fn close_project(app: &AppHandle) -> Result<(), String> {
+    let state = app.state::<Mutex<Option<ProjectConfiguration>>>();
+    let mut project_lock = state.lock().map_err(|_| "Failed to lock project state")?;
+    *project_lock = None;
+    Ok(())
+}
+
+fn get_project_configuration_from_location(
+    app: &AppHandle,
+    location: &String,
+) -> Result<ProjectConfiguration, String> {
+    if has_project(app) {
+        crate::silence!(close_project(app));
     }
 
-    let graph_dir = root_dir.join("graphs/");
-    if !graph_dir.exists() {
-        let _ = create_dir_all(graph_dir.clone());
+    let location_as_root_dir = PathBuf::from(location);
+    if !location_as_root_dir.exists() || !location_as_root_dir.is_dir() {
+        return Err(format!(
+            "{location} does not exist or is not a valid directory."
+        ));
     }
 
-    let graph_entries = crate::fs::list_directory(graph_dir.to_str().unwrap().to_string())
-        .await
-        .map_err(|e| e)?;
-
-    let graphs = graph_entries
-        .entries
-        .iter()
-        .filter(|f| f.ext.is_some())
-        .map(|f| (f, f.ext.clone().unwrap()))
-        .filter(|(_, ext)| ext.eq("graph"))
-        .map(|(f, _)| f)
-        .map(|fg| ProjectGraph::from_file(PathBuf::from(fg.path.clone())))
-        .filter(|graph_result| graph_result.is_ok())
-        .map(|graph| graph.unwrap())
-        .collect::<Vec<_>>();
-
-    let script_dir = root_dir.join("scripts/");
-    if !script_dir.exists() {
-        let _ = create_dir_all(script_dir);
+    let toml_location = location_as_root_dir.join("Flow.toml");
+    if !toml_location.is_file() || !toml_location.exists() {
+        return Err(format!("{toml_location:?} could not be found."));
     }
 
-    Ok(Project {
-        name: project.name,
-        graphs: graphs,
+    toml_from_project_location(&toml_location).map(|original| ProjectConfiguration {
+        info: original.info.clone(),
+        location: location.clone(),
     })
+}
+
+fn toml_from_project_location(location: &PathBuf) -> Result<ProjectTOMLConfiguration, String> {
+    let mut toml_str_buffer = String::new();
+
+    let _config_wrapper_result = std::fs::File::open(location)
+        .unwrap()
+        .read_to_string(&mut toml_str_buffer);
+
+    let config_wrapper = toml::from_str::<ProjectTOMLConfiguration>(&toml_str_buffer)
+        .map_err(|_| "Could not load Flow.toml")?;
+
+    Ok(config_wrapper)
+}
+
+fn distinct_projects() -> Vec<ProjectConfiguration> {
+    let mut collection = vec![];
+
+    let mut state_connection = crate::state::get_connection();
+    let projects = project::dsl::project
+        .select(TrackedProject::as_select())
+        .distinct()
+        .load::<TrackedProject>(&mut *state_connection)
+        .expect("Failed to load projects");
+
+    projects.iter().for_each(|tracked_project| {
+        let root_dir_path = PathBuf::from(tracked_project.directory_location.clone());
+        let toml_path = root_dir_path.join("Flow.toml");
+
+        if !root_dir_path.exists()
+            || !root_dir_path.is_dir()
+            || !toml_path.exists()
+            || !toml_path.is_file()
+        {
+            return;
+        }
+
+        silence!(match toml_from_project_location(&toml_path) {
+            Ok(config) => {
+                collection.push(ProjectConfiguration {
+                    info: config.info.clone(),
+                    location: tracked_project.directory_location.clone(),
+                });
+            }
+            Err(e) => {
+                eprintln!("Error loading Flow.toml at {toml_path:?} with: {e}");
+            }
+        });
+    });
+
+    collection
+}
+
+fn track_project(name: String, location: &String) -> QueryResult<TrackedProject> {
+    let mut state_connection = crate::state::get_connection();
+    diesel::insert_into(crate::schema::project::table)
+        .values(&NewTrackedProject {
+            title: name,
+            directory_location: location.to_string(),
+        })
+        .on_conflict_do_nothing()
+        .returning(TrackedProject::as_returning())
+        .get_result::<TrackedProject>(&mut *state_connection)
+}
+
+fn find_tracked_project_by_name_and_location(
+    config: &ProjectConfiguration,
+    location: &String,
+) -> Option<TrackedProject> {
+    let mut conn = crate::state::get_connection();
+
+    let target_name = &config.info.name;
+
+    project::dsl::project
+        .filter(title.eq(target_name))
+        .filter(directory_location.eq(location))
+        .first::<TrackedProject>(&mut *conn)
+        .optional()
+        .expect("Database query failed")
+}
+
+fn record_opening(p_id: i32) -> QueryResult<usize> {
+    use crate::schema::recent_project;
+
+    let mut state_connection = crate::state::get_connection();
+    diesel::insert_into(recent_project::table)
+        .values(recent_project::project_id.eq(p_id))
+        .execute(&mut *state_connection)
 }

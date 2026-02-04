@@ -5,6 +5,7 @@ import { Toaster } from "../ui/sonner";
 import { useTheme } from "../theme-provider";
 import { DialogRenderer } from "../dialogs/dialog-renderer.component";
 import { DialogProvider } from "../dialogs/dialog.provider";
+import { RootProviders } from "./root.providers";
 
 const Footer = () => {
   return (
@@ -36,11 +37,11 @@ const PageOutlet = () => {
 export const RootLayout = () => {
   /* <div className="flex flex-1 flex-col h-dvh w-dvw overflow-hidden"></div> */
   return (
-    <>
+    <RootProviders>
       <DialogProvider>
         <DialogRenderer />
         <PageOutlet />
       </DialogProvider>
-    </>
+    </RootProviders>
   );
 };

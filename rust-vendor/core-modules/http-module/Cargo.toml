@@ -1,0 +1,11 @@
+[package]
+name = "http-module"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+dyn-rt = { path = "../../dyn-rt/dyn-rt" }
+reqwest = { version = "0.13.1", features = ["json"] }

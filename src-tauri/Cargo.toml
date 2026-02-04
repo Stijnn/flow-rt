@@ -1,12 +1,12 @@
 [package]
-name = "hackthebox-app"
+name = "flow-rt-app"
 version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
 
 [lib]
-name = "hackthebox_app_lib"
+name = "flow_rt_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -23,6 +23,12 @@ anyhow = "1.0.100"
 dyn-rt = { path = "../rust-vendor/dyn-rt/dyn-rt" }
 tokio = { version = "1.48.0", features = ["fs", "macros", "full"] }
 rustc-hash = "2.1.1"
+diesel = { version = "2.2.0", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"] }
+libsqlite3-sys = { version = "0.30", features = ["bundled"] }
+dotenvy = "0.15"
+diesel_migrations = { version = "2.3.1", features = ["sqlite"] }
+chrono = "0.4.43"
+toml = "0.9.11"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = ["Win32_Storage_FileSystem"] }
@@ -30,6 +36,6 @@ windows = { version = "0.58", features = ["Win32_Storage_FileSystem"] }
 [dev-dependencies]
 criterion = { version = "0.8.1", features = ["html_reports"] }
 
-[[bench]]
-name = "graph_benchmarks"
-harness = false
+# [[bench]]
+# name = "graph_benchmarks"
+# harness = false

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "hackthebox-app",
+  "productName": "flow-rt-app",
   "version": "0.1.0",
-  "identifier": "com.redacted.hackthebox-app",
+  "identifier": "com.redacted.flow-rt-app",
   "build": {
     "beforeDevCommand": "./prebuild.py && npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "hackthebox-app",
+        "title": "flow-rt-app",
         "width": 800,
         "height": 600
       }

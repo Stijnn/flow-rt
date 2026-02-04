@@ -8,15 +8,15 @@ import {
 } from "react";
 import { toast } from "sonner";
 
-export interface PluginFunctionDescriptor {
-  function_name: string;
+export interface PluginForeignFunction {
+  schema: any;
 }
 
 export interface Plugin {
   name: string;
   description: string;
   version: string;
-  functions: any;
+  functions: PluginForeignFunction[];
   location: string;
   blake3_hash: string;
 }

@@ -1,6 +1,6 @@
 {
   "build": {
-    "beforeDevCommand": "python prebuild.py && npm run dev",
+    "beforeDevCommand": "python prebuild.py --clean && npm run dev",
     "beforeBuildCommand": "python prebuild.py --clean --release && npm run build"
   },
   "bundle": {

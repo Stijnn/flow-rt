@@ -53,10 +53,13 @@ import {
 
 import { getNodeTypes } from "../nodes/node.types";
 import { getEdgeTypes } from "../edges/edge.types";
+import { usePlugins } from "@/components/plugins/plugin.provider";
+import { createForeignFunctionNode } from "../nodes/foreign-function.node.component";
 
 const GraphEditorContextMenu = () => {
   const reactFlow = useReactFlow();
   const { getFlowPosition } = useCursorPosition();
+  const { plugins } = usePlugins();
 
   return (
     <ContextMenuContent className="overflow-hidden">
@@ -85,6 +88,40 @@ const GraphEditorContextMenu = () => {
           >
             Script Node
           </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuLabel>Libraries</ContextMenuLabel>
+          {plugins.map((plugin) => {
+            return (
+              <>
+                <ContextMenuSub>
+                  <ContextMenuSubTrigger>{plugin.name}</ContextMenuSubTrigger>
+                  <ContextMenuSubContent>
+                    {[...Object.keys(plugin.functions)].map((v, i) => {
+                      const desc = Object.values(plugin.functions)[i];
+                      return (
+                        <ContextMenuItem
+                          onClick={() => {
+                            reactFlow.addNodes(
+                              createForeignFunctionNode({
+                                data: {
+                                  pluginName: plugin.name,
+                                  functionName: v,
+                                  function: desc
+                                },
+                                position: getFlowPosition(),
+                              })
+                            );
+                          }}
+                        >
+                          {v}
+                        </ContextMenuItem>
+                      );
+                    })}
+                  </ContextMenuSubContent>
+                </ContextMenuSub>
+              </>
+            );
+          })}
         </ContextMenuSubContent>
       </ContextMenuSub>
     </ContextMenuContent>
@@ -149,7 +186,7 @@ export const SearchNode = ({ children }: { children: ReactNode }) => {
     const nodes = rf
       .getNodes()
       .filter((n) => n.id.includes(searchText) || n.type?.includes(searchText));
-      
+
     setNodeReferences(nodes);
   }, [searchText]);
 

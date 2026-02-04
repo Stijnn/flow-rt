@@ -22,6 +22,7 @@ fn libmain() -> Plugin {
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "::dyn_rt::serde")]
+#[dyn_rt::macros::reflect]
 struct NmapArguments {}
 
 #[dyn_rt::macros::command]

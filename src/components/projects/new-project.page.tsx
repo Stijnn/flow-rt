@@ -13,16 +13,17 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Spinner } from "../ui/spinner";
 import { invoke } from "@tauri-apps/api/core";
-import { Project } from "@/lib/models";
+import { ProjectConfiguration } from "@/lib/models";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "../ui/alert";
 import { AlertCircleIcon } from "lucide-react";
-import { useProjects } from "./projects.provider";
 import { useNavigate } from "react-router";
+import { useProjects } from "./projects.provider";
 
 export const NewProjectPage = () => {
-    const { addProject } = useProjects();
-    const nav = useNavigate();
+  const nav = useNavigate();
+  
+  const { refreshProjects } = useProjects();
   const [projectName, setProjectName] = useState<string | null>(null);
   const [initializeError, setInitializeError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -36,23 +37,20 @@ export const NewProjectPage = () => {
     setIsInitializing(true);
 
     if (!projectName) {
-        setInitializeError("Invalid project name");
-        setIsInitializing(false);
-        return;
+      setInitializeError("Invalid project name");
+      setIsInitializing(false);
+      return;
     }
 
-    invoke<Project>("initialize_project", {
+    invoke<ProjectConfiguration>("create_project", {
       newProject: {
         name: projectName,
+        location: `C:\\Users\\stijn\\.projects\\${projectName}`,
       },
     })
-      .then((successObject) => {
+      .then((_) => {
         setInitializeError(null);
-        addProject({
-            projectName: successObject.name,
-            projectLocation: successObject.name
-        });
-        nav("/");
+        refreshProjects();
       })
       .catch((e) => {
         toast.error(e);
@@ -79,10 +77,8 @@ export const NewProjectPage = () => {
             <div className="flex flex-col space-y-5">
               <Activity mode={initializeError !== null ? "visible" : "hidden"}>
                 <Alert variant={"destructive"}>
-                    <AlertCircleIcon />
-                    <AlertDescription>
-                        { initializeError }
-                    </AlertDescription>
+                  <AlertCircleIcon />
+                  <AlertDescription>{initializeError}</AlertDescription>
                 </Alert>
               </Activity>
               <Label htmlFor="projectName">Project Name</Label>
