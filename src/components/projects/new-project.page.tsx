@@ -37,12 +37,8 @@ export const NewProjectPage = () => {
 
   const pickProjectDirectory = async () => {
     const dir = await invoke<string>("validate_directory", {
-      location: await open({
-        multiple: false,
-        dialog: true,
-      }),
+      location: await invoke<string | null>("select_directory"),
     });
-
     setProjectLocation(dir);
   };
 
@@ -55,10 +51,16 @@ export const NewProjectPage = () => {
       return;
     }
 
+    if (!projectLocation) {
+      setInitializeError("Invalid location");
+      setIsInitializing(false);
+      return;
+    }
+
     invoke<ProjectConfiguration>("create_project", {
       newProject: {
         name: projectName,
-        location: projectLocation,
+        location: `${projectLocation}/${projectName}`,
       },
     })
       .then((_) => {
@@ -112,9 +114,6 @@ export const NewProjectPage = () => {
               />
               <Label htmlFor="projectDirectory">Location</Label>
               <div className="flex w-full items-center gap-2">
-                <Button onClick={async () => await pickProjectDirectory()}>
-                  Select folder
-                </Button>
                 <Input
                   required
                   id="projectDirectory"
@@ -122,6 +121,9 @@ export const NewProjectPage = () => {
                   placeholder={projectLocation ?? `No location selected`}
                   disabled={true}
                 />
+                <Button variant={"outline"} onClick={async () => await pickProjectDirectory()}>
+                  Select folder
+                </Button>
               </div>
             </div>
           </Activity>

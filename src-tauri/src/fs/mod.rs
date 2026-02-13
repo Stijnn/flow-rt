@@ -1,5 +1,6 @@
 use std::{fs::create_dir_all, path::PathBuf};
 
+use rfd::AsyncFileDialog;
 use serde::{Deserialize, Serialize};
 use tokio::fs::read_dir;
 
@@ -55,6 +56,62 @@ pub(crate) struct DirectoryItem {
     pub(crate) path: String,
     pub(crate) ext: Option<String>,
     pub(crate) item_type: DirectoryItemType,
+}
+
+#[tauri::command]
+pub(crate) async fn select_directory(
+    location: Option<String>,
+    can_create_directories: Option<bool>,
+    title: Option<String>,
+) -> Option<String> {
+    let mut dialog_builder = AsyncFileDialog::new()
+        .set_title("Select project directory")
+        .set_can_create_directories(true);
+
+    if let Some(can_create) = can_create_directories {
+        dialog_builder = dialog_builder.set_can_create_directories(can_create);
+    }
+
+    if let Some(title) = title {
+        dialog_builder = dialog_builder.set_title(title);
+    }
+
+    let entry_dir = match location {
+        Some(given_location) => {
+            let path_buf = PathBuf::from(given_location.clone());
+            if path_buf.exists() && path_buf.is_dir() {
+                Some(PathBuf::from(given_location))
+            } else {
+                let home_dir = get_home_directory().await;
+                if let Ok(home_path) = home_dir {
+                    Some(PathBuf::from(home_path))
+                } else {
+                    None
+                }
+            }
+        }
+        None => {
+            let home_dir = get_home_directory().await;
+            if let Ok(home_path) = home_dir {
+                Some(PathBuf::from(home_path))
+            } else {
+                None
+            }
+        }
+    };
+
+    if let Some(entry) = entry_dir {
+        if entry.exists() && entry.is_dir() {
+            dialog_builder = dialog_builder.set_directory(entry);
+        }
+    }
+
+    let selection = dialog_builder.pick_folder().await;
+
+    match selection {
+        Some(selected) => Some(selected.path().to_string_lossy().into_owned()),
+        None => None,
+    }
 }
 
 #[tauri::command]

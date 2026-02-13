@@ -62,6 +62,7 @@ pub fn run() {
             fs::get_home_directory,
             fs::list_drives,
             fs::validate_directory,
+            fs::select_directory,
             settings::get_or_init_settings,
             settings::sync_settings,
             projects::create_project,
