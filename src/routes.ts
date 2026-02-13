@@ -1,4 +1,4 @@
-import { createBrowserRouter, createHashRouter, redirect } from "react-router";
+import { createHashRouter, redirect } from "react-router";
 import { RootLayout } from "./components/pages/layout.page";
 import { ProjectsLayout } from "./components/projects/projects.layout";
 import { NewProjectPage } from "./components/projects/new-project.page";
@@ -12,64 +12,64 @@ import { EditorGraphsOverviewPage } from "./components/editor/pages/editor-graph
 import { EditorScriptsOverviewPage } from "./components/editor/pages/editor-scripts-overview.page";
 
 export const router = createHashRouter([
-    {
-        path: "/",
-        Component: RootLayout,
-        ErrorBoundary: ErrorPage,
+  {
+    path: "/",
+    Component: RootLayout,
+    ErrorBoundary: ErrorPage,
+    children: [
+      {
+        index: true,
+        loader: async () => {
+          return redirect("/projects");
+        },
+      },
+      {
+        path: "projects",
+        Component: ProjectsLayout,
         children: [
-            {
-                index: true,
-                loader: async () => {
-                    return redirect("/projects");
-                }
-            },
-            {
-                path: "projects",
-                Component: ProjectsLayout,
-                children: [
-                    {
-                        index: true,
-                        Component: ProjectsPage,
-                    },
-                    {
-                        path: "new",
-                        Component: NewProjectPage,
-                    }
-                ]
-            },
-            {
-                path: "editor",
-                Component: EditorLayout,
-                children: [
-                    {
-                        index: true,
-                        Component: EditorDashboardPage
-                    },
-                    {
-                        path: "graphs",
-                        Component: EditorGraphsOverviewPage
-                    },
-                    {
-                        path: "graphs/:name",
-                        Component: EditorGraphPage
-                    },
-                    {
-                        path: "scripts",
-                        Component: EditorScriptsOverviewPage
-                    },
-                    {
-                        path: "scripts/:name",
-                        Component: EditorScriptsOverviewPage
-                    }
-                ]
-            },
-            {
-                path: "plugins/inspect/:name",
-                loader: async ({ params }) => {
-                    return { name: params.name };
-                },
-                Component: PluginInspectPage
-            }
+          {
+            index: true,
+            Component: ProjectsPage,
+          },
+          {
+            path: "new",
+            Component: NewProjectPage,
+          },
         ],
-    }
+      },
+      {
+        path: "editor",
+        Component: EditorLayout,
+        children: [
+          {
+            index: true,
+            Component: EditorDashboardPage,
+          },
+          {
+            path: "graphs",
+            Component: EditorGraphsOverviewPage,
+          },
+          {
+            path: "graphs/:name",
+            Component: EditorGraphPage,
+          },
+          {
+            path: "scripts",
+            Component: EditorScriptsOverviewPage,
+          },
+          {
+            path: "scripts/:name",
+            Component: EditorScriptsOverviewPage,
+          },
+        ],
+      },
+      {
+        path: "plugins/inspect/:name",
+        loader: async ({ params }) => {
+          return { name: params.name };
+        },
+        Component: PluginInspectPage,
+      },
+    ],
+  },
 ]);

@@ -18,6 +18,7 @@
           "url": "https://*.hackthebox.com"
         }
       ]
-    }
+    },
+    "dialog:default"
   ]
 }

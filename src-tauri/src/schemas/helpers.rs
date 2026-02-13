@@ -1,4 +1,7 @@
-use std::{io::{BufReader, Write}, path::PathBuf};
+use std::{
+    io::{BufReader, Write},
+    path::PathBuf,
+};
 
 use serde::{de, ser};
 
@@ -7,7 +10,7 @@ use crate::schemas::helpers;
 pub trait JsonFile
 where
     Self: de::DeserializeOwned,
-    Self: ser::Serialize
+    Self: ser::Serialize,
 {
     fn from_json_file(path: &PathBuf) -> Result<Self, String>
     where
@@ -66,8 +69,7 @@ pub(super) fn impl_to_json_file<T: serde::ser::Serialize>(
     .map_err(|e| format!("Failed to convert object into string. Reason: {e}"))?;
 
     let mut f =
-        std::fs::File::create(path)
-            .map_err(|e| format!("Failed to create file. Reason: {e}"))?;
+        std::fs::File::create(path).map_err(|e| format!("Failed to create file. Reason: {e}"))?;
 
     f.write_all(buffer.as_bytes())
         .map_err(|e| format!("Failed to write bytes. Reason: {e}"))?;

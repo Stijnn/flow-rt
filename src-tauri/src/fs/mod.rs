@@ -1,4 +1,4 @@
-use std::{fs::create_dir_all, path::{PathBuf}};
+use std::{fs::create_dir_all, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 use tokio::fs::read_dir;
@@ -39,14 +39,14 @@ pub(crate) async fn get_home_directory() -> Result<String, String> {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct DirectoryListing {
-    pub(crate) entries: Vec<DirectoryItem>
+    pub(crate) entries: Vec<DirectoryItem>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) enum DirectoryItemType {
     File,
     Directory,
-    Other
+    Other,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -54,7 +54,25 @@ pub(crate) struct DirectoryItem {
     pub(crate) name: String,
     pub(crate) path: String,
     pub(crate) ext: Option<String>,
-    pub(crate) item_type: DirectoryItemType
+    pub(crate) item_type: DirectoryItemType,
+}
+
+#[tauri::command]
+pub(crate) async fn validate_directory(location: String) -> Result<String, String> {
+    let path = PathBuf::from(location);
+
+    if path.is_file() {
+        return path
+            .parent()
+            .map(|p| p.to_string_lossy().to_string())
+            .ok_or_else(|| "Could not find parent directory".to_string());
+    }
+
+    if path.is_dir() {
+        return Ok(path.to_string_lossy().to_string());
+    }
+
+    Err("Path does not exist".to_string())
 }
 
 #[tauri::command]
@@ -63,9 +81,15 @@ pub(crate) async fn list_drives() -> Result<DirectoryListing, String> {
     todo!();
     #[cfg(target_os = "windows")]
     {
-        let drives = win32_get_logical_drives().iter().map(|drive_letter| {
-            DirectoryItem {name:drive_letter.clone(),path:drive_letter.clone(),item_type:DirectoryItemType::Directory, ext: None }
-        }).collect::<Vec<_>>();
+        let drives = win32_get_logical_drives()
+            .iter()
+            .map(|drive_letter| DirectoryItem {
+                name: drive_letter.clone(),
+                path: drive_letter.clone(),
+                item_type: DirectoryItemType::Directory,
+                ext: None,
+            })
+            .collect::<Vec<_>>();
         let listing = DirectoryListing { entries: drives };
         Ok(listing)
     }
@@ -101,19 +125,28 @@ pub(crate) async fn list_directory(path: String) -> Result<DirectoryListing, Str
     }
 
     let mut dir_entries = read_dir(path_buf).await.map_err(|_| "Error reading dir")?;
-    let mut dir_listing = DirectoryListing {
-        entries: vec![]
-    };
+    let mut dir_listing = DirectoryListing { entries: vec![] };
     while let Ok(entry_result) = dir_entries.next_entry().await {
         match entry_result {
             Some(entry) => {
-                let file_type = entry.file_type().await.map_err(|_| "Error retrieving entry type")?;
+                let file_type = entry
+                    .file_type()
+                    .await
+                    .map_err(|_| "Error retrieving entry type")?;
 
                 let mut extension: Option<String> = None;
                 let entry_type = if file_type.is_dir() {
                     DirectoryItemType::Directory
                 } else if file_type.is_file() {
-                    extension = Some(entry.path().extension().unwrap().to_str().unwrap().to_string());
+                    extension = Some(
+                        entry
+                            .path()
+                            .extension()
+                            .unwrap()
+                            .to_str()
+                            .unwrap()
+                            .to_string(),
+                    );
                     DirectoryItemType::File
                 } else {
                     DirectoryItemType::Other
@@ -122,15 +155,18 @@ pub(crate) async fn list_directory(path: String) -> Result<DirectoryListing, Str
                 let entry_name = entry.file_name().to_str().unwrap().to_string();
                 let entry_path = entry.path().to_str().unwrap().to_string();
 
-                let item = DirectoryItem {name:entry_name,path:entry_path,item_type:entry_type, ext: extension };
+                let item = DirectoryItem {
+                    name: entry_name,
+                    path: entry_path,
+                    item_type: entry_type,
+                    ext: extension,
+                };
                 println!("{item:?}");
-                dir_listing.entries.push(
-                    item
-                );
-            },
+                dir_listing.entries.push(item);
+            }
             None => {
                 break;
-            },
+            }
         }
     }
 
@@ -149,7 +185,11 @@ pub(crate) fn get_or_init_settings_path() -> Option<PathBuf> {
     Some(path)
 }
 
-pub(crate) fn visit_dirs(dir: &std::path::Path, root: &std::path::Path, files: &mut Vec<crate::projects::ProjectFile>) -> Result<(), String> {
+pub(crate) fn visit_dirs(
+    dir: &std::path::Path,
+    root: &std::path::Path,
+    files: &mut Vec<crate::projects::ProjectFile>,
+) -> Result<(), String> {
     if dir.is_dir() {
         for entry in std::fs::read_dir(dir).map_err(|e| e.to_string())? {
             let entry = entry.map_err(|e| e.to_string())?;
@@ -172,7 +212,10 @@ pub(crate) fn visit_dirs(dir: &std::path::Path, root: &std::path::Path, files: &
                     .unwrap_or("")
                     .to_string();
 
-                files.push(crate::projects::ProjectFile::new(relative_location, extension));
+                files.push(crate::projects::ProjectFile::new(
+                    relative_location,
+                    extension,
+                ));
             }
         }
     }

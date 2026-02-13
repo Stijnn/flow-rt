@@ -7,14 +7,14 @@ use diesel::prelude::*;
 pub struct TrackedProject {
     pub id: i32,
     pub title: String,
-    pub directory_location: String
+    pub directory_location: String,
 }
 
 #[derive(Insertable)]
 #[diesel(table_name = crate::schema::project)]
 pub struct NewTrackedProject {
     pub title: String,
-    pub directory_location: String
+    pub directory_location: String,
 }
 
 #[derive(Queryable, Selectable, Insertable, Associations, Debug)]

@@ -1,4 +1,8 @@
-use std::{io::Read, path::{Path, PathBuf}, sync::Mutex};
+use std::{
+    io::Read,
+    path::{Path, PathBuf},
+    sync::Mutex,
+};
 
 use diesel::{
     ExpressionMethods, OptionalExtension, QueryDsl, QueryResult, RunQueryDsl, SelectableHelper,
@@ -7,7 +11,10 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{
-    fs::visit_dirs, models::{NewTrackedProject, TrackedProject}, schema::project::{self, directory_location, title}, silence
+    fs::visit_dirs,
+    models::{NewTrackedProject, TrackedProject},
+    schema::project::{self, directory_location, title},
+    silence,
 };
 
 mod initializer;
@@ -20,12 +27,15 @@ pub(crate) struct ProjectStructure {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ProjectFile {
     relative_location: String,
-    extension: String
+    extension: String,
 }
 
 impl ProjectFile {
     pub(crate) fn new(relative_location: String, extension: String) -> Self {
-        Self { relative_location, extension }
+        Self {
+            relative_location,
+            extension,
+        }
     }
 }
 

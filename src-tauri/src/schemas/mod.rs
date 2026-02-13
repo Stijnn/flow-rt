@@ -6,13 +6,13 @@ pub(super) mod helpers;
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct FileReference {
-    pub full_path: String
+    pub full_path: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct FlowProject {
     pub flow_graphs: Vec<FlowGraph>,
-    pub file_reference: Option<FileReference>
+    pub file_reference: Option<FileReference>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -20,7 +20,7 @@ pub struct FlowGraph {
     pub nodes: Option<Vec<FlowGraphNode>>,
     pub edges: Option<Vec<FlowGraphEdge>>,
     pub viewport: Option<Viewport>,
-    pub file_reference: Option<FileReference>
+    pub file_reference: Option<FileReference>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -59,10 +59,7 @@ pub struct Measurement {
 pub struct Viewport {
     pub x: f32,
     pub y: f32,
-    pub zoom: f32
+    pub zoom: f32,
 }
 
-implement_trait_from_json_file!([
-    FlowGraph,
-    FlowProject
-]);
+implement_trait_from_json_file!([FlowGraph, FlowProject]);

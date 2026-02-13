@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::from_str;
 use tauri::{AppHandle, Manager};
-use tokio::sync::{Mutex};
+use tokio::sync::Mutex;
 
 #[derive(Debug, Clone)]
 pub struct Version {
@@ -55,7 +55,7 @@ impl<'de> Deserialize<'de> for Version {
 }
 
 pub struct AppSettingsState {
-    pub settings: Mutex<AppSettings>
+    pub settings: Mutex<AppSettings>,
 }
 
 const THEME_MODE_DEFAULT: &str = "system";
@@ -72,8 +72,8 @@ pub struct AppSettings {
 
 impl Default for AppSettings {
     fn default() -> Self {
-        Self { 
-            version: Version::default(), 
+        Self {
+            version: Version::default(),
             theme_mode: "system".to_owned(),
         }
     }
@@ -116,7 +116,7 @@ pub async fn get_or_init_settings(app: AppHandle) -> Result<AppSettings, String>
 }
 
 #[tauri::command]
-pub async fn sync_settings(app: AppHandle, new_settings: AppSettings) -> Result<(), String>{
+pub async fn sync_settings(app: AppHandle, new_settings: AppSettings) -> Result<(), String> {
     println!("{new_settings:?}");
 
     let settings_dir = crate::fs::get_or_init_settings_path();
@@ -134,7 +134,8 @@ pub async fn sync_settings(app: AppHandle, new_settings: AppSettings) -> Result<
         .await
         .map_err(|_| "Failed to write default AppSettings to settings.conf.json")?;
 
-    let state = app.try_state::<AppSettingsState>()
+    let state = app
+        .try_state::<AppSettingsState>()
         .ok_or("AppSettingsState not managed by Tauri")?;
 
     let mut settings_lock = state.settings.lock().await;

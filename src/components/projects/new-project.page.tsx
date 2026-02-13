@@ -19,18 +19,31 @@ import { Alert, AlertDescription } from "../ui/alert";
 import { AlertCircleIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useProjects } from "./projects.provider";
+import { open } from "@tauri-apps/plugin-dialog";
 
 export const NewProjectPage = () => {
   const nav = useNavigate();
-  
+
   const { refreshProjects } = useProjects();
   const [projectName, setProjectName] = useState<string | null>(null);
+  const [projectLocation, setProjectLocation] = useState<string | null>(null);
   const [initializeError, setInitializeError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
 
   const validateProjectName = (newName: string) => {
     const regex = /^[a-zA-Z0-9-]+$/;
     return regex.test(newName);
+  };
+
+  const pickProjectDirectory = async () => {
+    const dir = await invoke<string>("validate_directory", {
+      location: await open({
+        multiple: false,
+        dialog: true,
+      }),
+    });
+
+    setProjectLocation(dir);
   };
 
   const initializeProject = () => {
@@ -45,7 +58,7 @@ export const NewProjectPage = () => {
     invoke<ProjectConfiguration>("create_project", {
       newProject: {
         name: projectName,
-        location: `C:\\Users\\stijn\\.projects\\${projectName}`,
+        location: projectLocation,
       },
     })
       .then((_) => {
@@ -99,12 +112,14 @@ export const NewProjectPage = () => {
               />
               <Label htmlFor="projectDirectory">Location</Label>
               <div className="flex w-full items-center gap-2">
+                <Button onClick={async () => await pickProjectDirectory()}>
+                  Select folder
+                </Button>
                 <Input
+                  required
                   id="projectDirectory"
                   type="text"
-                  placeholder={`env:$HOME/.projects/${
-                    projectName ?? "some-project-name"
-                  }`}
+                  placeholder={projectLocation ?? `No location selected`}
                   disabled={true}
                 />
               </div>

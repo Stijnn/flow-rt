@@ -2,7 +2,7 @@ use std::sync::Mutex;
 
 use dyn_rt::registry::PluginRegistry;
 use tauri::{async_runtime::block_on, Manager};
-use tauri_plugin_prevent_default::{KeyboardShortcut};
+use tauri_plugin_prevent_default::KeyboardShortcut;
 use tokio::sync::Mutex as TokioMutex;
 
 use crate::{
@@ -30,7 +30,7 @@ pub fn run() {
                 | tauri_plugin_prevent_default::Flags::RELOAD
                 | tauri_plugin_prevent_default::Flags::PRINT
                 | tauri_plugin_prevent_default::Flags::DOWNLOADS
-                | tauri_plugin_prevent_default::Flags::keyboard()
+                | tauri_plugin_prevent_default::Flags::keyboard(),
         )
         .shortcut(KeyboardShortcut::with_alt("ArrowLeft"))
         .shortcut(KeyboardShortcut::with_alt("ArrowRight"))
@@ -39,16 +39,17 @@ pub fn run() {
     #[cfg(debug_assertions)]
     let prevent = tauri_plugin_prevent_default::Builder::new()
         .with_flags(
-                tauri_plugin_prevent_default::Flags::RELOAD
+            tauri_plugin_prevent_default::Flags::RELOAD
                 | tauri_plugin_prevent_default::Flags::PRINT
                 | tauri_plugin_prevent_default::Flags::DOWNLOADS
-                | tauri_plugin_prevent_default::Flags::keyboard()
+                | tauri_plugin_prevent_default::Flags::keyboard(),
         )
         .shortcut(KeyboardShortcut::with_alt("ArrowLeft"))
         .shortcut(KeyboardShortcut::with_alt("ArrowRight"))
         .build();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(prevent)
@@ -60,6 +61,7 @@ pub fn run() {
             fs::list_directory,
             fs::get_home_directory,
             fs::list_drives,
+            fs::validate_directory,
             settings::get_or_init_settings,
             settings::sync_settings,
             projects::create_project,

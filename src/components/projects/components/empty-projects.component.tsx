@@ -1,4 +1,3 @@
-import { DirectorySelector } from "@/components/fs/directory-selector.component";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -28,7 +27,13 @@ export const EmptyProjects = () => {
       </EmptyHeader>
       <EmptyContent>
         <div className="flex gap-2">
-          <Button onClick={() => { nav("/projects/new", { viewTransition: true }) }}>Create Project</Button>
+          <Button
+            onClick={() => {
+              nav("/projects/new");
+            }}
+          >
+            Create Project
+          </Button>
           <Button variant="outline">Import Project</Button>
         </div>
       </EmptyContent>
