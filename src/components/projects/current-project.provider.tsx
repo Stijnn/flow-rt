@@ -1,51 +1,85 @@
-import { Graph, Project } from "@/lib/models";
+import { Graph, ProjectConfiguration, ProjectStructure } from "@/lib/models";
 import { Fn } from "@/lib/types";
-import { createContext, ReactNode, useContext, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 type CurrentProjectState = {
-    project: Project;
-    addGraph: (props: GraphCreationProps) => Fn<void> | Fn<Graph>;
-    addScript: (props: ScriptCreationProps) => Fn<void> | Fn<Graph>;
-}
+  project: ProjectConfiguration;
+  getGraphs: () => any[];
+  getScripts: () => any[];
+  addGraph: (props: GraphCreationProps) => Fn<void> | Fn<Graph>;
+  addScript: (props: ScriptCreationProps) => Fn<void> | Fn<Graph>;
+};
 
-export type ScriptCreationProps = {
+export type ScriptCreationProps = {};
 
-}
-
-export type GraphCreationProps = {
-
-}
+export type GraphCreationProps = {};
 
 const CurrentProjectContext = createContext<CurrentProjectState | null>(null);
 
-export const CurrentProjectProvider = ({ children, selectedProject }: { children: ReactNode, selectedProject: Project }) => {
-    const [currentProject, _] = useState<Project>(selectedProject);
+export const CurrentProjectProvider = ({
+  children,
+  selectedProject,
+}: {
+  children: ReactNode;
+  selectedProject: ProjectConfiguration;
+}) => {
+  const [currentProject, _] = useState<ProjectConfiguration>(selectedProject);
+  const [structure, setStructure] = useState<ProjectStructure | null>(null);
 
-    const addScript = (props: ScriptCreationProps) => {
-
+  useEffect(() => {
+    if (currentProject) {
+      invoke<ProjectStructure>("build_project_structure", {
+        root: currentProject.location,
+      })
+        .then((result) => {
+          setStructure(result);
+        })
+        .catch((e) => console.error(e));
     }
+  }, [currentProject]);
 
-    const addGraph = (props: GraphCreationProps) => {
+  const addScript = (props: ScriptCreationProps) => {};
 
-    }
+  const addGraph = (props: GraphCreationProps) => {};
 
-    return (
-        <CurrentProjectContext.Provider value={{
-            project: currentProject,
-            addGraph,
-            addScript
-        }}>
-            { children }
-        </CurrentProjectContext.Provider>
-    );
-}
+  return (
+    <CurrentProjectContext.Provider
+      value={{
+        project: currentProject,
+        getGraphs: () => {
+            if (structure) {
+                return structure.files.filter((file) => file.extension === "flow");
+            }
+            return [];
+        },
+        getScripts: () => {
+            if (structure) {
+                return structure.files.filter((file) => file.extension === "lua");
+            }
+            return [];
+        },
+        addGraph,
+        addScript,
+      }}
+    >
+      {children}
+    </CurrentProjectContext.Provider>
+  );
+};
 
 export const useCurrentProject = () => {
-    const ctx = useContext(CurrentProjectContext);
+  const ctx = useContext(CurrentProjectContext);
 
-    if (!ctx) {
-        throw Error
-    }
+  if (!ctx) {
+    throw Error;
+  }
 
-    return ctx;
-}
+  return ctx;
+};

@@ -1,4 +1,4 @@
-import { createHashRouter, redirect } from "react-router";
+import { createBrowserRouter, createHashRouter, redirect } from "react-router";
 import { RootLayout } from "./components/pages/layout.page";
 import { ProjectsLayout } from "./components/projects/projects.layout";
 import { NewProjectPage } from "./components/projects/new-project.page";

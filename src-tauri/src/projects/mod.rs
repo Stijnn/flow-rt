@@ -1,4 +1,4 @@
-use std::{io::Read, path::PathBuf, sync::Mutex};
+use std::{io::Read, path::{Path, PathBuf}, sync::Mutex};
 
 use diesel::{
     ExpressionMethods, OptionalExtension, QueryDsl, QueryResult, RunQueryDsl, SelectableHelper,
@@ -7,12 +7,27 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{
-    models::{NewTrackedProject, TrackedProject},
-    schema::project::{self, directory_location, title},
-    silence,
+    fs::visit_dirs, models::{NewTrackedProject, TrackedProject}, schema::project::{self, directory_location, title}, silence
 };
 
 mod initializer;
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub(crate) struct ProjectStructure {
+    files: Vec<ProjectFile>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub(crate) struct ProjectFile {
+    relative_location: String,
+    extension: String
+}
+
+impl ProjectFile {
+    pub(crate) fn new(relative_location: String, extension: String) -> Self {
+        Self { relative_location, extension }
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ProjectTOMLConfiguration {
@@ -61,6 +76,20 @@ pub(crate) async fn create_project(
 }
 
 #[tauri::command]
+pub(crate) async fn build_project_structure(root: String) -> Result<ProjectStructure, String> {
+    let mut files = Vec::new();
+    let root_path = Path::new(&root);
+
+    if !root_path.is_dir() {
+        return Err("Provided path is not a directory".to_string());
+    }
+
+    visit_dirs(root_path, root_path, &mut files)?;
+
+    Ok(ProjectStructure { files })
+}
+
+#[tauri::command]
 pub(crate) async fn open_project(
     app: AppHandle,
     location: String,
@@ -93,6 +122,14 @@ pub(crate) async fn open_project(
 #[tauri::command]
 pub(crate) async fn get_all_projects() -> Vec<ProjectConfiguration> {
     distinct_projects()
+}
+
+#[tauri::command]
+pub(crate) async fn get_current_project(app: AppHandle) -> Option<ProjectConfiguration> {
+    app.state::<Mutex<Option<ProjectConfiguration>>>()
+        .lock()
+        .unwrap()
+        .clone()
 }
 
 fn has_project(app: &AppHandle) -> bool {

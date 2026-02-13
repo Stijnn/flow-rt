@@ -90,7 +90,7 @@ function AppSidebarFooter() {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { project } = useCurrentProject();
+  const { getGraphs, getScripts } = useCurrentProject();
   const nav = useNavigate();
 
   return (
@@ -122,13 +122,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupLabel>Graphs</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {project.graphs?.map((graphs) => {
+              {getGraphs().map((graphs) => {
                 return (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       onClick={() => nav(`/editor/graphs/${graphs.name}`)}
                     >
                       {graphs.name}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Scripts</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {getScripts().map((script) => {
+                return (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => nav(`/editor/scripts/${script.name}`)}
+                    >
+                      {script.name}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

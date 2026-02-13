@@ -6,6 +6,7 @@ import { useTheme } from "../theme-provider";
 import { DialogRenderer } from "../dialogs/dialog-renderer.component";
 import { DialogProvider } from "../dialogs/dialog.provider";
 import { RootProviders } from "./root.providers";
+import { useEffect } from "react";
 
 const Footer = () => {
   return (

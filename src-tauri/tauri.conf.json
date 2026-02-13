@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "create": true,
         "title": "flow-rt-app",
         "width": 800,
         "height": 600

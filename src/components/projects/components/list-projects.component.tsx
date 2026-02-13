@@ -12,7 +12,7 @@ import { useProjects } from "../projects.provider";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export const ListProjects = () => {
-  const { projects } = useProjects();
+  const { projects, openProject } = useProjects();
   const nav = useNavigate();
 
   return (
@@ -35,12 +35,15 @@ export const ListProjects = () => {
             <Item key={project.info.name} variant={"muted"}>
               <ItemHeader>{project.info.name}</ItemHeader>
               <ItemContent>
-                <ItemDescription>
-                  Location: {project.location}
-                </ItemDescription>
+                <ItemDescription>Location: {project.location}</ItemDescription>
               </ItemContent>
               <ItemActions>
-                <Button variant={"outline"}>Open</Button>
+                <Button
+                  variant={"outline"}
+                  onClick={async () => openProject(project)}
+                >
+                  Open
+                </Button>
               </ItemActions>
             </Item>
           ))}

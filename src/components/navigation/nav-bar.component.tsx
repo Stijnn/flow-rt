@@ -21,7 +21,7 @@ import { useProjects } from "../projects/projects.provider";
 import { PluginOverviewDialog } from "../plugins/components/plugin-overview-dialog.component";
 
 const ProjectSpecificMenu = () => {
-  const { clearProject } = useProjects();
+  const { unloadProject } = useProjects();
   const dialogManager = useDialogManager();
   const nav = useNavigate();
 
@@ -56,8 +56,8 @@ const ProjectSpecificMenu = () => {
         <MenubarItem
           variant="destructive"
           onClick={() => {
-            clearProject();
-            nav("/");
+            unloadProject();
+            nav("/projects");
           }}
         >
           <X />

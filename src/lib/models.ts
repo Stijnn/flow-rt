@@ -49,3 +49,12 @@ export type NewProject = {
   name: string;
   location: string;
 };
+
+export type ProjectStructure = {
+  files: ProjectFile[]
+}
+
+export type ProjectFile = {
+  relativeLocation: string;
+  extension: string;
+}

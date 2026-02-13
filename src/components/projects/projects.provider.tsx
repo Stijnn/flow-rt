@@ -15,7 +15,10 @@ import { useNavigate } from "react-router";
 type ProjectsContextProps = {
   projects: ProjectConfiguration[];
   isEmpty: boolean;
+  selectedProject: ProjectConfiguration | undefined;
+  openProject: (configuration: ProjectConfiguration) => Promise<void> | void;
   refreshProjects: () => Promise<void> | void;
+  unloadProject: () => Promise<void> | void;
 } | null;
 
 const ProjectsContext = createContext<ProjectsContextProps>(null);
@@ -25,7 +28,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   const [projects, setProjects] = useState<ProjectConfiguration[]>([]);
   const [unlistenFunctionArray, setUnlistenFunctionArray] = useState<UnlistenFn[]>([]); 
 
-  const [selectedProject, setSelectedProject] = useState<Project | undefined>(
+  const [selectedProject, setSelectedProject] = useState<ProjectConfiguration | undefined>(
     undefined
   );
 
@@ -33,6 +36,18 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     invoke<ProjectConfiguration[]>("get_all_projects").then((allProjects) => setProjects((_) => [...allProjects])).catch((e) => {
       console.error(e);
     });
+  }
+
+  const openProject = (configuration: ProjectConfiguration) => {
+    invoke<ProjectConfiguration>("open_project", { location: configuration.location }).then((newConfiguration) => setSelectedProject(newConfiguration)).catch((e) => {
+      console.error(e);
+    });
+  }
+
+  const unloadProject = () => {
+    if (selectedProject) {
+      setSelectedProject(undefined);
+    }
   }
 
   useEffect(() => {
@@ -47,6 +62,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       }
     }).then((fn) => setUnlistenFunctionArray((prev) => [...prev, fn]));
 
+    invoke<ProjectConfiguration | undefined>("get_current_project").then((invokeResult) => {
+      setSelectedProject(invokeResult);
+    });
+
     return () => {
       unlistenFunctionArray.forEach((f) => f());
     }
@@ -57,7 +76,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       value={{
         projects,
         isEmpty: projects.length === 0,
-        refreshProjects
+        selectedProject,
+        openProject,
+        refreshProjects,
+        unloadProject
       }}
     >
       {selectedProject && (

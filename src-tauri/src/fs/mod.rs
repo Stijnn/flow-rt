@@ -148,3 +148,33 @@ pub(crate) fn get_or_init_settings_path() -> Option<PathBuf> {
 
     Some(path)
 }
+
+pub(crate) fn visit_dirs(dir: &std::path::Path, root: &std::path::Path, files: &mut Vec<crate::projects::ProjectFile>) -> Result<(), String> {
+    if dir.is_dir() {
+        for entry in std::fs::read_dir(dir).map_err(|e| e.to_string())? {
+            let entry = entry.map_err(|e| e.to_string())?;
+            let path = entry.path();
+
+            if path.is_dir() {
+                // Recursively visit subdirectories
+                visit_dirs(&path, root, files)?;
+            } else {
+                // Extract relative path
+                let relative_location = path
+                    .strip_prefix(root)
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .map_err(|e| e.to_string())?;
+
+                // Extract extension
+                let extension = path
+                    .extension()
+                    .and_then(|ext| ext.to_str())
+                    .unwrap_or("")
+                    .to_string();
+
+                files.push(crate::projects::ProjectFile::new(relative_location, extension));
+            }
+        }
+    }
+    Ok(())
+}
