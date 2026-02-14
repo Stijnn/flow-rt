@@ -1,7 +1,5 @@
-import { PlusIcon, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useDialogManager } from "../dialogs/dialog.provider";
-import { usePlugins } from "../plugins/plugin.provider";
-import { useCurrentProject } from "../projects/current-project.provider";
 import { SettingsPage } from "../settings/settings.page";
 import {
   Menubar,
@@ -79,9 +77,11 @@ export function NavBar() {
         <MenubarMenu>
           <MenubarTrigger>Plugins</MenubarTrigger>
           <MenubarContent>
-            <MenubarItem onClick={async () => {
-              addDialog(() => <PluginOverviewDialog />);
-            }}>
+            <MenubarItem
+              onClick={async () => {
+                addDialog(() => <PluginOverviewDialog />);
+              }}
+            >
               Manage
             </MenubarItem>
           </MenubarContent>

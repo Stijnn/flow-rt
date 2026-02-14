@@ -69,7 +69,8 @@ pub fn run() {
             projects::open_project,
             projects::get_all_projects,
             projects::get_current_project,
-            projects::build_project_structure
+            projects::build_project_structure,
+            projects::graphs::create_graph,
         ])
         .setup(|app| {
             let settings_handle = app.handle();

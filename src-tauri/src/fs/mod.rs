@@ -269,9 +269,16 @@ pub(crate) fn visit_dirs(
                     .unwrap_or("")
                     .to_string();
 
+                let file_name = path
+                    .file_prefix()
+                    .and_then(|file_name| file_name.to_str())
+                    .unwrap_or("")
+                    .to_string();
+
                 files.push(crate::projects::ProjectFile::new(
                     relative_location,
                     extension,
+                    file_name,
                 ));
             }
         }

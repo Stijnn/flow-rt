@@ -54,16 +54,17 @@ export const CurrentProjectProvider = ({
       value={{
         project: currentProject,
         getGraphs: () => {
-            if (structure) {
-                return structure.files.filter((file) => file.extension === "flow");
-            }
-            return [];
+          if (structure) {
+            console.log(structure.files);
+            return structure.files.filter((file) => file.extension === "jfg");
+          }
+          return [];
         },
         getScripts: () => {
-            if (structure) {
-                return structure.files.filter((file) => file.extension === "lua");
-            }
-            return [];
+          if (structure) {
+            return structure.files.filter((file) => file.extension === "lua");
+          }
+          return [];
         },
         addGraph,
         addScript,

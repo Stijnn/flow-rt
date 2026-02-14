@@ -19,6 +19,8 @@ use crate::{
 
 mod initializer;
 
+pub(crate) mod graphs;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ProjectStructure {
     files: Vec<ProjectFile>,
@@ -27,13 +29,15 @@ pub(crate) struct ProjectStructure {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ProjectFile {
     relative_location: String,
+    name: String,
     extension: String,
 }
 
 impl ProjectFile {
-    pub(crate) fn new(relative_location: String, extension: String) -> Self {
+    pub(crate) fn new(relative_location: String, extension: String, name: String) -> Self {
         Self {
             relative_location,
+            name,
             extension,
         }
     }

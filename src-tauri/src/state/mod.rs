@@ -1,5 +1,4 @@
 use std::{
-    path::PathBuf,
     sync::{Mutex, OnceLock},
 };
 

@@ -22,7 +22,12 @@ import { useCurrentProject } from "@/components/projects/current-project.provide
 import { Maybe } from "@/lib/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { invoke } from "@tauri-apps/api/core";
-import { AbstractGraphType, createGraph, CreateGraphPropsDataType, NewEventGraphData } from "@/lib/graph.utils";
+import {
+  AbstractGraphType,
+  createGraph,
+  CreateGraphPropsDataType,
+  NewEventGraphData,
+} from "@/lib/graph.utils";
 import { hasDefinedProps, validateName } from "@/lib/utils";
 import { NewEventGraph } from "./new-event-graph.component";
 import { NewFunctionGraph } from "./new-function-graph.component";
@@ -41,7 +46,7 @@ export const NewGraphDialog = () => {
   const { addGraph } = useCurrentProject();
 
   const updateGraphProps = (
-    updated: Partial<NewGraphProps> | NewGraphProps
+    updated: Partial<NewGraphProps> | NewGraphProps,
   ) => {
     setNewGraphProps((prev) => {
       return {
@@ -80,23 +85,25 @@ export const NewGraphDialog = () => {
 
     if (hasDefinedProps(obj)) {
       invoke("create_graph", {
-        graph: createGraph({
+        parameters: createGraph({
           name: obj.graphName,
           graphType: obj.graphType,
-          data: obj.data
+          data: obj.data,
+        }),
+      })
+        .catch((e) => {
+          toast.error("Failed to create graph", {
+            description: e,
+          });
+          setError((prev) => [...prev, e]);
         })
-      })
-      .catch((e) => {
-        toast.error("Failed to create graph", {
-          description: e,
+        .finally(() => {
+          setIsCreating(false);
         });
-        setError((prev) => [...prev, e])
-      })
-      .finally(() => {
-        setIsCreating(false);
-      })
     } else {
-      throw Error(`hasDefinedProps(obj) got an object that with partial data. Potential guard rails invalid. ${JSON.stringify(obj)}`)
+      throw Error(
+        `hasDefinedProps(obj) got an object that with partial data. Potential guard rails invalid. ${JSON.stringify(obj)}`,
+      );
     }
   };
 
