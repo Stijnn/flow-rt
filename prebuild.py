@@ -26,7 +26,7 @@ CORE_MODULES_WS_DIR = "./rust-vendor/core-modules"
 CORE_MODULES_WS_TOML_LOC = f"{CORE_MODULES_WS_DIR}/Cargo.toml"
 
 CORE_MODULES_BUILD_DIR = f"{CORE_MODULES_WS_DIR}/target/{TARGET_DIR}/"
-MODULES_TARGET_DIR = "./src-tauri/modules/"
+MODULES_TARGET_DIR = "./flow-rt-app/modules/"
 
 
 def reformat_name_to_lib_name(name: str):
