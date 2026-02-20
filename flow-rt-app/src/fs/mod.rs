@@ -108,10 +108,7 @@ pub(crate) async fn select_directory(
 
     let selection = dialog_builder.pick_folder().await;
 
-    match selection {
-        Some(selected) => Some(selected.path().to_string_lossy().into_owned()),
-        None => None,
-    }
+    selection.map(|selected| selected.path().to_string_lossy().into_owned())
 }
 
 #[tauri::command]

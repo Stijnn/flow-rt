@@ -48,8 +48,8 @@ pub(super) fn impl_from_json_file<T: serde::de::DeserializeOwned>(
     let f = std::fs::File::open(path).map_err(|e| "Failed to open file")?;
     let b = BufReader::new(f);
 
-    Ok(serde_json::from_reader::<BufReader<std::fs::File>, T>(b)
-        .map_err(|e| format!("Error deserializing file: {e}"))?)
+    serde_json::from_reader::<BufReader<std::fs::File>, T>(b)
+        .map_err(|e| format!("Error deserializing file: {e}"))
 }
 
 pub(super) fn impl_to_json_file<T: serde::ser::Serialize>(
